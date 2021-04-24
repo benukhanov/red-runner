@@ -38,6 +38,9 @@ class CommandWrapper(object):
                        max(self.__return_codes, key=self.__return_codes.get))
 
 
+command_wrapper = None
+
+
 @ click.command()
 @ click.option('-c', default=1, metavar='COUNT', help='Number of times to run the given command.')
 @ click.option('--failed-count', default=-1, metavar='N', help='Number of allowed failed command invocation attempts before giving up.')
@@ -56,11 +59,13 @@ def run(c, failed_count, command):
     click.echo(command_wrapper.print_summary())
 
 
-command_wrapper = None
-
-if __name__ == '__main__':
+def main():
     try:
         run(standalone_mode=False)
     except click.exceptions.Abort:
         if command_wrapper is not None:
             click.echo(command_wrapper.print_summary())
+
+
+if __name__ == '__main__':
+    main()
