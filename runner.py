@@ -27,6 +27,15 @@ class CommandWrapper(object):
         else:
             self.__return_codes[code] = 1
 
+    def print_summary(self):
+        click.echo("\n--- command execution statistics ---")
+
+        for key, value in self.__return_codes.items():
+            click.echo("return code: %s" % key + " amount: %s" % value)
+
+        click.echo("most frequent return code: %s" %
+                   max(self.__return_codes, key=self.__return_codes.get))
+
 
 @ click.command()
 @ click.option('-c', default=1, metavar='COUNT', help='Number of times to run the given command.')
@@ -42,6 +51,8 @@ def run(c, failed_count, command):
 
             if command_wrapper.get_failed_count() == 0:
                 break
+
+    click.echo(command_wrapper.print_summary())
 
 
 command_wrapper = None
