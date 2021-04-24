@@ -7,9 +7,9 @@ class CommandWrapper(object):
         self.__tries = __tries
         self.__return_codes = {}
 
-    def execute(self, command, count=1):
+    def execute(self, cmd, count=1):
         for _ in range(count):
-            process = subprocess.run(command)
+            process = subprocess.run(cmd)
             code = process.returncode
 
             self.update_tries(code)
@@ -56,19 +56,19 @@ command_wrapper = None
 @ click.command()
 @ click.option('-c', '--count', default=1, metavar='COUNT', help='Number of times to run the given command.')
 @ click.option('--failed-count', default=-1, metavar='N', help='Number of allowed failed command invocation attempts before giving up.')
-@ click.argument('command', default='')
-def run(count, failed_count, command):
+@ click.argument('cmd', default='')
+def run(count, failed_count, cmd):
     global command_wrapper
     command_wrapper = CommandWrapper(failed_count)
 
-    if validate_command(command):
-        command_wrapper.execute(command.split(), count)
+    if validate_command(cmd):
+        command_wrapper.execute(cmd.split(), count)
 
     click.echo(command_wrapper.get_summary())
 
 
-def validate_command(command):
-    return command != ''
+def validate_command(cmd):
+    return cmd != ''
 
 
 def main():
