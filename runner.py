@@ -2,7 +2,7 @@ import click
 import subprocess
 
 
-class CommandWrapper(object):
+class Command(object):
     def __init__(self, __tries):
         self.__tries = __tries
         self.__return_codes = {}
@@ -46,11 +46,10 @@ class CommandWrapper(object):
             result += ("\nreturn code: %s" % key + " amount: %s" % value)
 
         result += "\nmost frequent return code: %s" % max(codes, key=codes.get)
-
         return result
 
 
-command_wrapper = None
+command = None
 
 
 @ click.command()
@@ -58,13 +57,13 @@ command_wrapper = None
 @ click.option('--failed-count', default=-1, metavar='N', help='Number of allowed failed command invocation attempts before giving up.')
 @ click.argument('cmd', default='')
 def run(count, failed_count, cmd):
-    global command_wrapper
-    command_wrapper = CommandWrapper(failed_count)
+    global command
+    command = Command(failed_count)
 
     if validate_command(cmd):
-        command_wrapper.execute(cmd.split(), count)
+        command.execute(cmd.split(), count)
 
-    click.echo(command_wrapper.get_summary())
+    click.echo(command.get_summary())
 
 
 def validate_command(cmd):
@@ -75,8 +74,8 @@ def main():
     try:
         run(standalone_mode=False)
     except click.exceptions.Abort:
-        if command_wrapper is not None:
-            click.echo(command_wrapper.get_summary())
+        if command is not None:
+            click.echo(command.get_summary())
 
 
 if __name__ == '__main__':
