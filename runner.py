@@ -30,11 +30,12 @@ class CommandWrapper(object):
     def print_summary(self):
         click.echo("\n--- command execution statistics ---")
 
-        for key, value in self.__return_codes.items():
-            click.echo("return code: %s" % key + " amount: %s" % value)
+        if len(self.__return_codes) > 0:
+            for key, value in self.__return_codes.items():
+                click.echo("return code: %s" % key + " amount: %s" % value)
 
-        click.echo("most frequent return code: %s" %
-                   max(self.__return_codes, key=self.__return_codes.get))
+            click.echo("most frequent return code: %s" %
+                       max(self.__return_codes, key=self.__return_codes.get))
 
 
 @ click.command()
