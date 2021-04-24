@@ -10,7 +10,7 @@ Build:
 
 Run:
 
-`docker run red-runner:latest runner.py [OPTION] [COMMAND]`
+`docker run red-runner:latest runner.py [OPTIONS] '[COMMAND]'`
 
 Test:
 
