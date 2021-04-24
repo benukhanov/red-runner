@@ -50,9 +50,20 @@ command = None
 
 
 @ click.command()
-@ click.option('-c', '--count', default=1, metavar='COUNT', help='Number of times to run the given command.')
-@ click.option('--failed-count', default=-1, metavar='N', help='Number of allowed failed command invocation attempts before giving up.')
-@ click.argument('cmd', default='')
+@ click.option(
+    '-c',
+    '--count',
+    default=1,
+    metavar='COUNT',
+    help='Number of times to run the given command.')
+@ click.option(
+    '--failed-count',
+    default=-1,
+    metavar='N',
+    help='Number of allowed failed command invocation attempts before giving up.')
+@ click.argument(
+    'cmd',
+    default='')
 def run(count, failed_count, cmd):
     global command
     command = Command(failed_count)
