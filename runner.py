@@ -7,27 +7,24 @@ class Command(object):
         self.__tries = __tries
         self.__return_codes = {}
 
-    def execute(self, cmd, count=1):
-        for _ in range(count):
+    def execute(self, cmd, repeat_times=1):
+        for _ in range(repeat_times):
+            if self.__tries == 0:
+                return
+
             process = subprocess.run(cmd)
             code = process.returncode
 
-            self.update_tries(code)
-            self.update_return_codes(code)
+            self.__update_tries(code)
+            self.__update_return_codes(code)
 
-            if self.get_tries() == 0:
-                return
-
-    def update_tries(self, code):
+    def __update_tries(self, code):
         if code == 0:
             return
 
         self.__tries -= 1
 
-    def get_tries(self):
-        self.__tries
-
-    def update_return_codes(self, code):
+    def __update_return_codes(self, code):
         codes = self.__return_codes
 
         if len(codes) > 0:
