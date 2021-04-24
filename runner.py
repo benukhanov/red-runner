@@ -5,12 +5,14 @@ import subprocess
 class CommandWrapper(object):
     def __init__(self, __failed_count):
         self.__failed_count = __failed_count
+        self.__return_codes = {}
 
     def execute(self, command):
         process = subprocess.run(command)
         code = process.returncode
 
         self.update_failed_count(code)
+        self.update_return_codes(code)
 
     def update_failed_count(self, code):
         if code != 0:
@@ -18,6 +20,12 @@ class CommandWrapper(object):
 
     def get_failed_count(self):
         self.__failed_count
+
+    def update_return_codes(self, code):
+        if len(self.__return_codes) > 0:
+            self.__return_codes[code] = self.__return_codes[code] + 1
+        else:
+            self.__return_codes[code] = 1
 
 
 @ click.command()
