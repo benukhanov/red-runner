@@ -22,20 +22,23 @@ class CommandWrapper(object):
         self.__tries
 
     def update_return_codes(self, code):
-        if len(self.__return_codes) > 0:
-            self.__return_codes[code] = self.__return_codes[code] + 1
+        codes = self.__return_codes
+
+        if len(codes) > 0:
+            codes[code] = codes[code] + 1
         else:
-            self.__return_codes[code] = 1
+            codes[code] = 1
 
-    def print_summary(self):
-        click.echo("\n--- command execution statistics ---")
+    def get_summary(self):
+        result = '\n--- command execution statistics ---'
+        codes = self.__return_codes
 
-        if len(self.__return_codes) > 0:
-            for key, value in self.__return_codes.items():
-                click.echo("return code: %s" % key + " amount: %s" % value)
+        if len(codes) > 0:
+            for key, value in codes.items():
+                result += ("\nreturn code: %s" % key + " amount: %s" % value)
 
-            click.echo("most frequent return code: %s" %
-                       max(self.__return_codes, key=self.__return_codes.get))
+        result += "\nmost frequent return code: %s" % max(codes, key=codes.get)
+        return result
 
 
 command_wrapper = None
@@ -56,7 +59,7 @@ def run(count, failed_count, command):
             if command_wrapper.get_tries() == 0:
                 break
 
-    click.echo(command_wrapper.print_summary())
+    click.echo(command_wrapper.get_summary())
 
 
 def main():
@@ -64,7 +67,7 @@ def main():
         run(standalone_mode=False)
     except click.exceptions.Abort:
         if command_wrapper is not None:
-            click.echo(command_wrapper.print_summary())
+            click.echo(command_wrapper.get_summary())
 
 
 if __name__ == '__main__':
