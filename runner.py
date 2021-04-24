@@ -58,4 +58,8 @@ def run(c, failed_count, command):
 command_wrapper = None
 
 if __name__ == '__main__':
-    run(standalone_mode=False)
+    try:
+        run(standalone_mode=False)
+    except click.exceptions.Abort:
+        if command_wrapper is not None:
+            click.echo(command_wrapper.print_summary())
