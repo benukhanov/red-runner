@@ -7,12 +7,16 @@ class CommandWrapper(object):
         self.__tries = __tries
         self.__return_codes = {}
 
-    def execute(self, command):
-        process = subprocess.run(command)
-        code = process.returncode
+    def execute(self, command, count=1):
+        for _ in range(count):
+            process = subprocess.run(command)
+            code = process.returncode
 
-        self.update_tries(code)
-        self.update_return_codes(code)
+            self.update_tries(code)
+            self.update_return_codes(code)
+
+            if self.get_tries() == 0:
+                return
 
     def update_tries(self, code):
         if code == 0:
@@ -57,14 +61,14 @@ def run(count, failed_count, command):
     global command_wrapper
     command_wrapper = CommandWrapper(failed_count)
 
-    if command != '':
-        for _ in range(count):
-            command_wrapper.execute(command.split())
-
-            if command_wrapper.get_tries() == 0:
-                break
+    if validate_command(command):
+        command_wrapper.execute(command.split(), count)
 
     click.echo(command_wrapper.get_summary())
+
+
+def validate_command(command):
+    return command != ''
 
 
 def main():
