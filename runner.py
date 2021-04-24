@@ -15,8 +15,10 @@ class CommandWrapper(object):
         self.update_return_codes(code)
 
     def update_tries(self, code):
-        if code != 0:
-            self.__tries -= 1
+        if code == 0:
+            return
+
+        self.__tries -= 1
 
     def get_tries(self):
         self.__tries
@@ -33,11 +35,14 @@ class CommandWrapper(object):
         result = '\n--- command execution statistics ---'
         codes = self.__return_codes
 
-        if len(codes) > 0:
-            for key, value in codes.items():
-                result += ("\nreturn code: %s" % key + " amount: %s" % value)
+        if len(codes) == 0:
+            return result
+
+        for key, value in codes.items():
+            result += ("\nreturn code: %s" % key + " amount: %s" % value)
 
         result += "\nmost frequent return code: %s" % max(codes, key=codes.get)
+
         return result
 
 
