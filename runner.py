@@ -8,6 +8,9 @@ class Command(object):
         self.__return_codes = {}
 
     def execute(self, cmd, repeat_times=1):
+        if len(cmd) == 0:
+            return
+
         for _ in range(repeat_times):
             if self.tries == 0:
                 return
@@ -63,15 +66,9 @@ command = None
 def run(count, failed_count, cmd):
     global command
     command = Command(tries=failed_count)
-
-    if validate_command(cmd):
-        command.execute(cmd=cmd.split(), repeat_times=count)
+    command.execute(cmd=cmd.split(), repeat_times=count)
 
     click.echo(command.get_summary())
-
-
-def validate_command(cmd):
-    return cmd != ''
 
 
 def main():
