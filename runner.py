@@ -3,34 +3,30 @@ import subprocess
 
 
 class Command(object):
-    def __init__(self, __tries):
-        self.__tries = __tries
+    def __init__(self, tries=1):
+        self.__tries = tries
         self.__return_codes = {}
 
     def execute(self, cmd, repeat_times=1):
         for _ in range(repeat_times):
-            if self.__tries == 0:
+            if self.tries == 0:
                 return
 
             process = subprocess.run(cmd)
             code = process.returncode
 
-            self.__update_tries(code)
-            self.__update_return_codes(code)
+            if code != 0:
+                self.tries -= 1
 
-    def __update_tries(self, code):
-        if code == 0:
-            return
+            self.__return_codes[code] = self.__return_codes.get(code, 0) + 1
 
-        self.__tries -= 1
+    @property
+    def tries(self):
+        return self.__tries
 
-    def __update_return_codes(self, code):
-        codes = self.__return_codes
-
-        if len(codes) > 0:
-            codes[code] = codes[code] + 1
-        else:
-            codes[code] = 1
+    @tries.setter
+    def tries(self, value):
+        self.__tries = value
 
     def get_summary(self):
         result = '\n--- command execution statistics ---'
@@ -60,16 +56,16 @@ command = None
     '--failed-count',
     default=-1,
     metavar='N',
-    help='Number of allowed failed command invocation attempts before giving up.')
+    help='Number of allowed failed command invocation attempts.')
 @ click.argument(
     'cmd',
     default='')
 def run(count, failed_count, cmd):
     global command
-    command = Command(failed_count)
+    command = Command(tries=failed_count)
 
     if validate_command(cmd):
-        command.execute(cmd.split(), count)
+        command.execute(cmd=cmd.split(), repeat_times=count)
 
     click.echo(command.get_summary())
 
