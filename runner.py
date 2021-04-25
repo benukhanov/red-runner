@@ -6,11 +6,13 @@ import logging
 
 
 class Command(object):
-    def __init__(self, tries=1):
+    def __init__(self, tries=1, sys_trace=False, log_trace=False):
         self.__tries = tries
+        self.__sys_trace = sys_trace
+        self.__log_trace = log_trace
         self.__return_codes = {}
 
-    def execute(self, cmd, repeat_times=1, sys_trace=False, log_trace=False):
+    def execute(self, cmd, repeat_times=1):
         logging.debug('execute()')
 
         if len(cmd) == 0:
@@ -29,29 +31,30 @@ class Command(object):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
 
-            if sys_trace:
+            if self.__sys_trace:
                 captured_sys_trace = capture_sys_trace(process.pid)
 
             stdout, stderr = process.communicate()
             process.wait()
 
-            code = process.returncode
+            self.__executed(process.returncode, stdout, stderr)
 
-            if code != 0:
-                logging.debug('execute() -> return_code != 0')
+    def __executed(self, code, stdout, stderr):
+        logging.debug(f'__on_executed() -> return_code: {code}')
 
-                self.tries -= 1
+        if code != 0:
+            self.tries -= 1
 
-                if sys_trace:
-                    save_sys_trace(captured_sys_trace)
+            if self.__sys_trace:
+                save_sys_trace(captured_sys_trace)
 
-                if stdout and log_trace:
-                    click.echo(f'\n{stdout.decode()}')
+            if stdout and self.__log_trace:
+                click.echo(f'\n{stdout.decode()}')
 
-                if stderr and log_trace:
-                    click.echo(f'\n{stderr.decode()}')
+            if stderr and self.__log_trace:
+                click.echo(f'\n{stderr.decode()}')
 
-            self.__return_codes[code] = self.__return_codes.get(code, 0) + 1
+        self.__return_codes[code] = self.__return_codes.get(code, 0) + 1
 
     @property
     def tries(self):
@@ -140,8 +143,8 @@ def run(count, failed_count, sys_trace, log_trace, debug, cmd):
     click.echo("Executing: %s" % cmd)
 
     global command
-    command = Command(failed_count)
-    command.execute(cmd.split(), count, sys_trace, log_trace)
+    command = Command(failed_count, sys_trace, log_trace)
+    command.execute(cmd.split(), count)
 
     click.echo(command.summary())
 
