@@ -20,7 +20,7 @@ class Command(object):
             process = subprocess.Popen(cmd)
 
             if sys_trace:
-                save_sys_trace(capture_sys_trace(process.pid))
+                captured_sys_trace = capture_sys_trace(process.pid)
 
             process.wait()
 
@@ -28,6 +28,9 @@ class Command(object):
 
             if code != 0:
                 self.tries -= 1
+
+                if sys_trace:
+                    save_sys_trace(captured_sys_trace)
 
             self.__return_codes[code] = self.__return_codes.get(code, 0) + 1
 
