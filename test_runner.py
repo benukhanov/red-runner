@@ -23,7 +23,9 @@ def test_should_set_tries_and_get_tries():
 def test_should_get_summary_after_command_execution():
     command = Command(tries=3)
     command.execute(cmd="hostname")
-    expected = "\n--- command execution statistics ---\nreturn code: 0 amount: 1\nmost frequent return code: 0"
+    expected = ("\n--- command execution statistics ---"
+                "\nreturn code: 0 amount: 1"
+                "\nmost frequent return code: 0")
     result = command.summary()
     assert result == expected
 
