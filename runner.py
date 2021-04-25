@@ -31,7 +31,7 @@ class Command(object):
     def tries(self, value):
         self.__tries = value
 
-    def get_summary(self):
+    def summary(self):
         result = '\n--- command execution statistics ---'
         codes = self.__return_codes
 
@@ -68,7 +68,7 @@ def run(count, failed_count, cmd):
     command = Command(tries=failed_count)
     command.execute(cmd=cmd.split(), repeat_times=count)
 
-    click.echo(command.get_summary())
+    click.echo(command.summary())
 
 
 def main():
@@ -76,7 +76,7 @@ def main():
         run(standalone_mode=False)
     except click.exceptions.Abort:
         if command is not None:
-            click.echo(command.get_summary())
+            click.echo(command.summary())
 
 
 if __name__ == '__main__':
