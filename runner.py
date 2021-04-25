@@ -2,6 +2,7 @@ import click
 import subprocess
 import psutil
 import time
+import logging
 
 
 class Command(object):
@@ -9,7 +10,9 @@ class Command(object):
         self.__tries = tries
         self.__return_codes = {}
 
-    def execute(self, cmd, repeat_times=1, sys_trace=False):
+    def execute(self, cmd, repeat_times=1, sys_trace=False, log_trace=False):
+        logging.debug('execute()')
+
         if len(cmd) == 0:
             return
 
@@ -17,11 +20,15 @@ class Command(object):
             if self.tries == 0:
                 return
 
-            process = subprocess.Popen(cmd)
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
 
             if sys_trace:
                 captured_sys_trace = capture_sys_trace(process.pid)
 
+            stdout, stderr = process.communicate()
             process.wait()
 
             code = process.returncode
@@ -32,17 +39,29 @@ class Command(object):
                 if sys_trace:
                     save_sys_trace(captured_sys_trace)
 
+                if stdout and log_trace:
+                    click.echo(f'\n{stdout.decode()}')
+
+                if stderr and log_trace:
+                    click.echo(f'\n{stderr.decode()}')
+
             self.__return_codes[code] = self.__return_codes.get(code, 0) + 1
 
     @property
     def tries(self):
+        logging.debug('tries.getter')
+
         return self.__tries
 
     @tries.setter
     def tries(self, value):
+        logging.debug('tries.setter')
+
         self.__tries = value
 
     def summary(self):
+        logging.debug('summary()')
+
         result = '\n--- command execution statistics ---'
         codes = self.__return_codes
 
@@ -57,6 +76,8 @@ class Command(object):
 
 
 def capture_sys_trace(process_id):
+    logging.debug('capture_sys_trace()')
+
     process = psutil.Process(process_id)
 
     return ["Disk I/O: {}".format(str(psutil.disk_io_counters(perdisk=False))),
@@ -67,6 +88,8 @@ def capture_sys_trace(process_id):
 
 
 def save_sys_trace(log):
+    logging.debug('save_sys_trace()')
+
     current_time = time.strftime("%H-%M-%S", time.localtime())
     file = open("sys-trace-{}.log".format(current_time), "w")
     file.writelines(log)
@@ -76,36 +99,44 @@ def save_sys_trace(log):
 command = None
 
 
-@ click.command()
-@ click.option(
+@click.command()
+@click.option(
     '-c',
     '--count',
     default=1,
     metavar='COUNT',
     help='Number of times to run the given command.')
-@ click.option(
+@click.option(
     '--failed-count',
     default=-1,
     metavar='N',
     help='Number of allowed failed command invocation attempts.')
-@ click.option(
+@click.option(
     '--sys-trace',
     is_flag=True,
-    help='If execution fails, a system trace log will be created.'
-)
-@ click.argument(
+    help='If execution fails, a system trace log will be created.')
+@click.option(
+    '--log-trace',
+    is_flag=True,
+    help='If execution fails, add the command output logs.')
+@click.argument(
     'cmd',
     default='')
-def run(count, failed_count, sys_trace, cmd):
+def run(count, failed_count, sys_trace, log_trace, cmd):
+    logging.debug('run()')
+
+    click.echo("Executing: %s" % cmd)
+
     global command
-    command = Command(tries=failed_count)
-    command.execute(cmd=cmd.split(), repeat_times=count, sys_trace=sys_trace)
+    command = Command(failed_count)
+    command.execute(cmd.split(), count, sys_trace, log_trace)
 
     click.echo(command.summary())
 
 
 def main():
     try:
+        logging.basicConfig(level=logging.NOTSET)
         run(standalone_mode=False)
     except click.exceptions.Abort:
         if command is not None:
