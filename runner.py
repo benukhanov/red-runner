@@ -1,5 +1,7 @@
 import click
 import subprocess
+import psutil
+import time
 
 
 class Command(object):
@@ -7,7 +9,7 @@ class Command(object):
         self.__tries = tries
         self.__return_codes = {}
 
-    def execute(self, cmd, repeat_times=1):
+    def execute(self, cmd, repeat_times=1, sys_trace=False):
         if len(cmd) == 0:
             return
 
@@ -15,7 +17,13 @@ class Command(object):
             if self.tries == 0:
                 return
 
-            process = subprocess.run(cmd)
+            process = subprocess.Popen(cmd)
+
+            if sys_trace:
+                save_sys_trace(capture_sys_trace(process.pid))
+
+            process.wait()
+
             code = process.returncode
 
             if code != 0:
@@ -45,6 +53,23 @@ class Command(object):
         return result
 
 
+def capture_sys_trace(process_id):
+    process = psutil.Process(process_id)
+
+    return ["Disk I/O: {}".format(str(psutil.disk_io_counters(perdisk=False))),
+            "\n% Memory: {}".format(str(process.memory_percent())),
+            "\n% CPU: {}".format(str(process.cpu_percent())),
+            "\nThreads: {}".format(str(process.threads())),
+            "\nNetwork Counters: {}".format(str(psutil.net_io_counters()))]
+
+
+def save_sys_trace(log):
+    current_time = time.strftime("%H-%M-%S", time.localtime())
+    file = open("sys-trace-{}.log".format(current_time), "w")
+    file.writelines(log)
+    file.close()
+
+
 command = None
 
 
@@ -60,13 +85,18 @@ command = None
     default=-1,
     metavar='N',
     help='Number of allowed failed command invocation attempts.')
+@ click.option(
+    '--sys-trace',
+    is_flag=True,
+    help='If execution fails, a system trace log will be created.'
+)
 @ click.argument(
     'cmd',
     default='')
-def run(count, failed_count, cmd):
+def run(count, failed_count, sys_trace, cmd):
     global command
     command = Command(tries=failed_count)
-    command.execute(cmd=cmd.split(), repeat_times=count)
+    command.execute(cmd=cmd.split(), repeat_times=count, sys_trace=sys_trace)
 
     click.echo(command.summary())
 
