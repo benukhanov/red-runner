@@ -14,11 +14,15 @@ class Command(object):
         logging.debug('execute()')
 
         if len(cmd) == 0:
+            logging.debug('execute() -> len(cmd) = 0')
             return
 
         for _ in range(repeat_times):
             if self.tries == 0:
+                logging.debug('execute() -> tries = 0')
                 return
+
+            logging.debug('execute() -> subprocess.Popen()')
 
             process = subprocess.Popen(
                 cmd,
@@ -34,6 +38,8 @@ class Command(object):
             code = process.returncode
 
             if code != 0:
+                logging.debug('execute() -> return_code != 0')
+
                 self.tries -= 1
 
                 if sys_trace:
@@ -66,6 +72,7 @@ class Command(object):
         codes = self.__return_codes
 
         if len(codes) == 0:
+            logging.debug('summary() -> len(__return_codes) = 0')
             return result
 
         for key, value in codes.items():
@@ -119,11 +126,16 @@ command = None
     '--log-trace',
     is_flag=True,
     help='If execution fails, add the command output logs.')
+@click.option(
+    '--debug',
+    is_flag=True,
+    help='Show each instruction executed by the script.')
 @click.argument(
     'cmd',
     default='')
-def run(count, failed_count, sys_trace, log_trace, cmd):
-    logging.debug('run()')
+def run(count, failed_count, sys_trace, log_trace, debug, cmd):
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
 
     click.echo("Executing: %s" % cmd)
 
@@ -136,7 +148,6 @@ def run(count, failed_count, sys_trace, log_trace, cmd):
 
 def main():
     try:
-        logging.basicConfig(level=logging.NOTSET)
         run(standalone_mode=False)
     except click.exceptions.Abort:
         if command is not None:
