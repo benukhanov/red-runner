@@ -6,11 +6,18 @@ import logging
 
 
 class Command(object):
-    def __init__(self, tries=1, sys_trace=False, log_trace=False):
+    def __init__(
+            self,
+            tries=1,
+            sys_trace=False,
+            call_trace=False,
+            log_trace=False):
         self.__tries = tries
+        self.__call_trace = call_trace
         self.__sys_trace = sys_trace
         self.__log_trace = log_trace
         self.__return_codes = {}
+        self.__captured_sys_trace = None
 
     def execute(self, cmd, repeat_times=1):
         logging.debug('execute()')
@@ -26,13 +33,16 @@ class Command(object):
 
             logging.debug('execute() -> subprocess.Popen()')
 
+            if self.__call_trace:
+                cmd = ['strace'] + cmd
+
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
 
             if self.__sys_trace:
-                captured_sys_trace = capture_sys_trace(process.pid)
+                self.__captured_sys_trace = capture_sys_trace(process.pid)
 
             stdout, stderr = process.communicate()
             process.wait()
@@ -46,7 +56,10 @@ class Command(object):
             self.tries -= 1
 
             if self.__sys_trace:
-                save_sys_trace(captured_sys_trace)
+                create_log('sys-trace', self.__captured_sys_trace)
+
+            if self.__call_trace:
+                create_log('call-trace', f'\n{stderr.decode()}')
 
             if stdout and self.__log_trace:
                 click.echo(f'\n{stdout.decode()}')
@@ -59,7 +72,6 @@ class Command(object):
     @property
     def tries(self):
         logging.debug('tries.getter')
-
         return self.__tries
 
     @tries.setter
@@ -97,12 +109,12 @@ def capture_sys_trace(process_id):
             "\nNetwork Counters: {}".format(str(psutil.net_io_counters()))]
 
 
-def save_sys_trace(log):
-    logging.debug('save_sys_trace()')
+def create_log(name, content):
+    logging.debug('create_log()')
 
-    current_time = time.strftime("%H-%M-%S", time.localtime())
-    file = open("sys-trace-{}.log".format(current_time), "w")
-    file.writelines(log)
+    name = f'{name}-{time.strftime("%H-%M-%S", time.localtime())}.log'
+    file = open(name, "w")
+    file.writelines(content)
     file.close()
 
 
@@ -126,6 +138,10 @@ command = None
     is_flag=True,
     help='If execution fails, a system trace log will be created.')
 @click.option(
+    '--call-trace',
+    is_flag=True,
+    help='If execution fails, a system calls log will be created.')
+@click.option(
     '--log-trace',
     is_flag=True,
     help='If execution fails, add the command output logs.')
@@ -136,14 +152,14 @@ command = None
 @click.argument(
     'cmd',
     default='')
-def run(count, failed_count, sys_trace, log_trace, debug, cmd):
+def run(count, failed_count, sys_trace, call_trace, log_trace, debug, cmd):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
 
     click.echo("Executing: %s" % cmd)
 
     global command
-    command = Command(failed_count, sys_trace, log_trace)
+    command = Command(failed_count, sys_trace, call_trace, log_trace)
     command.execute(cmd.split(), count)
 
     click.echo(command.summary())
