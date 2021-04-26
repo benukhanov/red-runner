@@ -1,5 +1,5 @@
 """
-A wrapper for any command with some useful options.
+Runner is a wrapper for any command with some useful options.
 
 Usage: runner.py [OPTIONS] '[CMD]'
 """
@@ -22,6 +22,22 @@ class Command(object):
         call_trace=False,
         log_trace=False
     ):
+        """
+        Initiate the command wrapper.
+
+        Parameters
+        ----------
+        cmd : list
+            The command to run (default is empty).
+        attempts : int
+            Number of allowed failed attempts (default is 1).
+        sys_trace : bool
+            A flag indicating if system trace should be enabled (default is False).
+        call_trace : bool
+            A flag indicating if call trace should be enabled (default is False).
+        log_trace : bool
+            A flag indicating if log trace should be enabled (default is False).
+        """
         if len(cmd) == 0:
             raise ValueError('No command specified')
 
@@ -37,7 +53,13 @@ class Command(object):
         self.__captured_sys_trace = None
 
     def execute(self, repeat_times=1):
-        """Executing a command and waiting for it to complete."""
+        """Executing a command and waiting for it to complete.
+
+        Parameters
+        ----------
+        repeat_times : int
+            Number of times to run command (default is 1).
+        """
         logging.debug('execute()')
 
         for _ in range(repeat_times):
@@ -66,7 +88,17 @@ class Command(object):
             self.__executed(process.returncode, stdout, stderr)
 
     def __executed(self, code, stdout, stderr):
-        """Called when the command has finished executing."""
+        """Called when the command has finished executing.
+
+        Parameters
+        ----------
+        code : bool
+            The return code of the command.
+        stdout : ellipsis
+            Standard command output.
+        stderr : ellipsis
+            Standard command error.
+        """
         logging.debug(f'__on_executed() -> return_code: {code}')
 
         # If the return code is not 0, then it failed.
@@ -98,7 +130,13 @@ class Command(object):
 
     @attempts.setter
     def attempts(self, value):
-        """Set the attempts value."""
+        """Set the attempts value.
+
+        Parameters
+        ----------
+        value : int
+            The new value.
+        """
         logging.debug('attempts.setter')
         self.__attempts = value
 
@@ -124,7 +162,13 @@ class Command(object):
 
 
 def capture_sys_trace(process_id):
-    """Captures and returns the system trace for the specified process."""
+    """Captures and returns the system trace for the specified process.
+
+    Parameters
+    ----------
+    process_id : int
+        The process identifier.
+    """
     logging.debug('capture_sys_trace()')
 
     # Captures the specified process.
@@ -139,7 +183,15 @@ def capture_sys_trace(process_id):
 
 
 def create_log_file(name, content):
-    """Create a log file."""
+    """Create a log file.
+
+    Parameters
+    ----------
+    name : str
+        Name of the log file.
+    content : str
+        Log file content.
+    """
     logging.debug('create_log_file()')
 
     # Set name for the log file.
@@ -195,7 +247,7 @@ def run(
     debug,
     cmd
 ):
-    """A wrapper for any command with some useful options."""
+    """Command wrapper to run any command."""
     if debug:
         logging.basicConfig(level=logging.DEBUG)
 
