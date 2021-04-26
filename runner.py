@@ -75,11 +75,11 @@ class Command(object):
 
             # If system tracing is enabled, create a log file.
             if self.__sys_trace:
-                create_log('sys-trace', self.__captured_sys_trace)
+                create_log_file('sys-trace', self.__captured_sys_trace)
 
             # If call tracing is enabled, create a log file.
             if self.__call_trace:
-                create_log('call-trace', f'\n{stderr.decode()}')
+                create_log_file('call-trace', f'\n{stderr.decode()}')
 
             # If log tracing is enabled, add the command output logs (stdout).
             if stdout and self.__log_trace:
@@ -142,9 +142,9 @@ def capture_sys_trace(process_id):
             f'\nNetwork Counters: {str(psutil.net_io_counters())}']
 
 
-def create_log(name, content):
+def create_log_file(name, content):
     """Create a log file."""
-    logging.debug('create_log()')
+    logging.debug('create_log_file()')
 
     # Set name for the log file.
     name = f'{name}-{time.strftime("%H-%M-%S", time.localtime())}.log'
