@@ -14,7 +14,7 @@ class Command(object):
             call_trace=False,
             log_trace=False):
         if len(cmd) == 0:
-            raise ValueError("No command specified")
+            raise ValueError('No command specified')
 
         if call_trace:
             cmd = ['strace'] + cmd
@@ -91,9 +91,9 @@ class Command(object):
             return result
 
         for key, value in codes.items():
-            result += ("\nreturn code: %s" % key + " amount: %s" % value)
+            result += (f'\nreturn code: {key} amount: {value}')
 
-        result += "\nmost frequent return code: %s" % max(codes, key=codes.get)
+        result += f'\nmost frequent return code: {max(codes, key=codes.get)}'
         return result
 
 
@@ -102,18 +102,18 @@ def capture_sys_trace(process_id):
 
     process = psutil.Process(process_id)
 
-    return ["Disk I/O: {}".format(str(psutil.disk_io_counters(perdisk=False))),
-            "\n% Memory: {}".format(str(process.memory_percent())),
-            "\n% CPU: {}".format(str(process.cpu_percent())),
-            "\nThreads: {}".format(str(process.threads())),
-            "\nNetwork Counters: {}".format(str(psutil.net_io_counters()))]
+    return [f'Disk I/O: {str(psutil.disk_io_counters(perdisk=False))}',
+            f'\n% Memory: {str(process.memory_percent())}',
+            f'\n% CPU: {str(process.cpu_percent())}',
+            f'\nThreads: {str(process.threads())}',
+            f'\nNetwork Counters: {str(psutil.net_io_counters())}']
 
 
 def create_log(name, content):
     logging.debug('create_log()')
 
     name = f'{name}-{time.strftime("%H-%M-%S", time.localtime())}.log'
-    file = open(name, "w")
+    file = open(name, 'w')
     file.writelines(content)
     file.close()
 
@@ -156,7 +156,7 @@ def run(count, failed_count, sys_trace, call_trace, log_trace, debug, cmd):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    click.echo("Executing: %s" % cmd)
+    click.echo(f'Executing: {cmd}')
 
     global command
     command = Command(
