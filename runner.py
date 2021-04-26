@@ -7,12 +7,13 @@ import logging
 
 class Command(object):
     def __init__(
-            self,
-            cmd=[],
-            tries=1,
-            sys_trace=False,
-            call_trace=False,
-            log_trace=False):
+        self,
+        cmd=[],
+        tries=1,
+        sys_trace=False,
+        call_trace=False,
+        log_trace=False
+    ):
         if len(cmd) == 0:
             raise ValueError('No command specified')
 
@@ -152,7 +153,15 @@ command = None
 @click.argument(
     'cmd',
     default='')
-def run(count, failed_count, sys_trace, call_trace, log_trace, debug, cmd):
+def run(
+    count,
+    failed_count,
+    sys_trace,
+    call_trace,
+    log_trace,
+    debug,
+    cmd
+):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
 
