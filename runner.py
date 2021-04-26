@@ -73,23 +73,19 @@ class Command(object):
         if code != 0:
             self.attempts -= 1
 
-            # If system tracing is enabled, create a log file.
             if self.__sys_trace:
                 create_log_file('sys-trace', self.__captured_sys_trace)
 
-            # If call tracing is enabled, create a log file.
             if self.__call_trace:
                 create_log_file('call-trace', f'\n{stderr.decode()}')
 
-            # If log tracing is enabled, add the command output logs (stdout).
-            if stdout and self.__log_trace:
-                # TODO: click.echo() should not be in the command class.
-                click.echo(f'\n{stdout.decode()}')
+            # TODO: click.echo() should not be in the command class.
+            if self.__log_trace:
+                if stdout:
+                    click.echo(f'\n{stdout.decode()}')
 
-            # If log tracing is enabled, add the command output logs (stderr).
-            if stderr and self.__log_trace:
-                # TODO: click.echo() should not be in the command class.
-                click.echo(f'\n{stderr.decode()}')
+                if stderr:
+                    click.echo(f'\n{stderr.decode()}')
 
         # Add or update the return code for the execution summary.
         self.__return_codes[code] = self.__return_codes.get(code, 0) + 1
