@@ -8,10 +8,18 @@ import logging
 class Command(object):
     def __init__(
             self,
+            cmd=[],
             tries=1,
             sys_trace=False,
             call_trace=False,
             log_trace=False):
+        if len(cmd) == 0:
+            raise ValueError("No command specified")
+
+        if call_trace:
+            cmd = ['strace'] + cmd
+
+        self.__cmd = cmd
         self.__tries = tries
         self.__call_trace = call_trace
         self.__sys_trace = sys_trace
@@ -19,12 +27,8 @@ class Command(object):
         self.__return_codes = {}
         self.__captured_sys_trace = None
 
-    def execute(self, cmd, repeat_times=1):
+    def execute(self, repeat_times=1):
         logging.debug('execute()')
-
-        if len(cmd) == 0:
-            logging.debug('execute() -> len(cmd) = 0')
-            return
 
         for _ in range(repeat_times):
             if self.tries == 0:
@@ -33,11 +37,8 @@ class Command(object):
 
             logging.debug('execute() -> subprocess.Popen()')
 
-            if self.__call_trace:
-                cmd = ['strace'] + cmd
-
             process = subprocess.Popen(
-                cmd,
+                self.__cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
 
@@ -77,13 +78,12 @@ class Command(object):
     @tries.setter
     def tries(self, value):
         logging.debug('tries.setter')
-
         self.__tries = value
 
     def summary(self):
         logging.debug('summary()')
 
-        result = '\n--- command execution statistics ---'
+        result = '--- command execution statistics ---'
         codes = self.__return_codes
 
         if len(codes) == 0:
@@ -159,8 +159,13 @@ def run(count, failed_count, sys_trace, call_trace, log_trace, debug, cmd):
     click.echo("Executing: %s" % cmd)
 
     global command
-    command = Command(failed_count, sys_trace, call_trace, log_trace)
-    command.execute(cmd.split(), count)
+    command = Command(
+        cmd=cmd.split(),
+        tries=failed_count,
+        sys_trace=sys_trace,
+        call_trace=call_trace,
+        log_trace=log_trace)
+    command.execute(repeat_times=count)
 
     click.echo(command.summary())
 
