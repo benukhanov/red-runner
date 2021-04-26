@@ -17,7 +17,7 @@ class Command(object):
     def __init__(
         self,
         cmd=[],
-        tries=1,
+        attempts=1,
         sys_trace=False,
         call_trace=False,
         log_trace=False
@@ -29,7 +29,7 @@ class Command(object):
             cmd = ['strace'] + cmd
 
         self.__cmd = cmd
-        self.__tries = tries
+        self.__attempts = attempts
         self.__call_trace = call_trace
         self.__sys_trace = sys_trace
         self.__log_trace = log_trace
@@ -41,9 +41,9 @@ class Command(object):
         logging.debug('execute()')
 
         for _ in range(repeat_times):
-            # Stop execution when there are no more tries.
-            if self.tries == 0:
-                logging.debug('execute() -> tries = 0')
+            # Stop execution when there are no more attempts.
+            if self.attempts == 0:
+                logging.debug('execute() -> attempts = 0')
                 return
 
             logging.debug('execute() -> subprocess.Popen()')
@@ -71,7 +71,7 @@ class Command(object):
 
         # If the return code is not 0, then it failed.
         if code != 0:
-            self.tries -= 1
+            self.attempts -= 1
 
             # If system tracing is enabled, create a log file.
             if self.__sys_trace:
@@ -95,16 +95,16 @@ class Command(object):
         self.__return_codes[code] = self.__return_codes.get(code, 0) + 1
 
     @property
-    def tries(self):
-        """Returns the tries."""
-        logging.debug('tries.getter')
-        return self.__tries
+    def attempts(self):
+        """Returns the attempts."""
+        logging.debug('attempts.getter')
+        return self.__attempts
 
-    @tries.setter
-    def tries(self, value):
-        """Set the tries value."""
-        logging.debug('tries.setter')
-        self.__tries = value
+    @attempts.setter
+    def attempts(self, value):
+        """Set the attempts value."""
+        logging.debug('attempts.setter')
+        self.__attempts = value
 
     def summary(self):
         """Returns a summary of the command execution."""
@@ -212,7 +212,7 @@ def run(
     # Creates a new command.
     command = Command(
         cmd=cmd.split(),
-        tries=failed_count,
+        attempts=failed_count,
         sys_trace=sys_trace,
         call_trace=call_trace,
         log_trace=log_trace)
